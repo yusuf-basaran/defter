@@ -74,7 +74,9 @@ Kurgusal Girne, Lefkoşa ve Gazimağusa belgeleri için `docs/example-legacy.jso
 
 ## Firebase üretim kurulumu
 
-Bu repoda gerçek Firebase projesi veya üretim anahtarı tanımlı değildir. Varsayılan `.firebaserc` yalnızca emülatör projesidir. Gerçek proje oluşturma, Blaze onayı ve konsol ayarları hesap sahibinin hesabında yapılmalıdır.
+Üretim projesi `defterr-prod-2026-da392`, site `https://defterr.vercel.app/`. `.firebaserc` içinde `production` takma adı bu projeye, varsayılan proje ise güvenli yerel geliştirme için `demo-defter` emülatörüne gider. `js/firebase-config.js` yalnızca herkese açık web yapılandırması ve App Check site anahtarı içerir.
+
+Authentication, Firestore kuralları/indeksleri ve App Check ayarları dağıtıldı. Faturalandırma hesabı kapalı olduğu için Blaze, Cloud Functions ve Storage kurulumu henüz tamamlanmadı; fatura işlemleri üretimde kullanıma hazır değildir. Güncel durum ve kalan adımlar [üretim kurulum notunda](docs/firebase-production.md).
 
 1. Geliştirme ve üretim için ayrı Firebase projeleri oluştur. Bu model Firestore Standard / Native veritabanı ve standart modüler SDK sorguları kullanır. Firestore ve Storage konumunu Functions’ın `europe-west1` bölgesiyle birlikte değerlendir; veri konumunu bilinçli seç.
 2. Authentication’da Email/Password sağlayıcısını aç. Şifre politikasını **en az 8 karakter zorunlu** yap. İstemcideki kontrol tek başına sunucu şifre politikasının yerine geçmez.
@@ -152,11 +154,12 @@ Blaze kullanılamıyorsa Spark üzerinde istemci transaction’ı + `getAfter()`
 - [x] Emülatörde iki işletme arasında çapraz erişim reddedildi.
 - [x] Tarayıcıda Auth, düzenleme, PDF, ödeme/iptal, abonelik sonrası okuma ve yedek indirme denendi.
 - [x] Kurallarda açık `if true` yok; koleksiyonlar tanımlı, diğer yollar kapalı.
-- [ ] Üretim projesinde kurallar ve indeksler dağıtıldı.
-- [ ] Üretim App Check sağlayıcısı ve enforcement doğrulandı.
-- [ ] Firebase Auth şifre politikası en az 8 karakter olarak zorunlu kılındı.
+- [x] Üretim Firestore kuralları ve indeksleri dağıtıldı. Storage kuralları bucket kurulunca dağıtılacak.
+- [x] Üretim reCAPTCHA Enterprise sağlayıcısı ve Firestore/Storage App Check enforcement ayarları API’den doğrulandı.
+- [ ] Üretim tarayıcısında App Check token değişimi ve callable erişimi doğrulandı.
+- [x] Firebase Auth şifre politikası en az 8 karakter olarak zorunlu kılındı.
 - [ ] Gerçek e-posta doğrulama teslimi denendi.
-- [ ] Authorized domains yalnızca kullanılan alan adlarıyla sınırlandı.
+- [x] Authorized domains site ve Firebase’in iki uygulama alan adıyla sınırlandı.
 - [ ] Google Cloud bütçe alarmı ve bildirim alıcıları kuruldu.
 - [ ] Gerçek projede iki ayrı işletmeyle çapraz erişim denendi.
 

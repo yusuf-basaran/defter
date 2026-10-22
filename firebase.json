@@ -7,8 +7,15 @@
       "ignore": ["node_modules", ".git", "*.log"]
     }
   ],
-  "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
-  "storage": { "rules": "storage.rules" },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json",
+    "database": "(default)",
+    "location": "europe-west1"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
@@ -29,12 +36,42 @@
     ]
   },
   "emulators": {
-    "auth": { "host": "127.0.0.1", "port": 9099 },
-    "firestore": { "host": "127.0.0.1", "port": 8080 },
-    "functions": { "host": "127.0.0.1", "port": 5001 },
-    "storage": { "host": "127.0.0.1", "port": 9199 },
-    "hosting": { "host": "127.0.0.1", "port": 5000 },
-    "ui": { "enabled": true, "host": "127.0.0.1", "port": 4000 },
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 9099
+    },
+    "firestore": {
+      "host": "127.0.0.1",
+      "port": 8080
+    },
+    "functions": {
+      "host": "127.0.0.1",
+      "port": 5001
+    },
+    "storage": {
+      "host": "127.0.0.1",
+      "port": 9199
+    },
+    "hosting": {
+      "host": "127.0.0.1",
+      "port": 5000
+    },
+    "ui": {
+      "enabled": true,
+      "host": "127.0.0.1",
+      "port": 4000
+    },
     "singleProjectMode": true
+  },
+  "auth": {
+    "authorizedDomains": [
+      "defterr-prod-2026-da392.firebaseapp.com",
+      "defterr-prod-2026-da392.web.app",
+      "defterr.vercel.app"
+    ],
+    "providers": {
+      "emailPassword": true,
+      "anonymous": false
+    }
   }
 }

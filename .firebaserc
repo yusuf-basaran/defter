@@ -1,1 +1,6 @@
-{ "projects": { "default": "demo-defter" } }
+{
+  "projects": {
+    "default": "demo-defter",
+    "production": "defterr-prod-2026-da392"
+  }
+}
