@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Defter — Platform yönetimi</title>
+    <link rel="icon" href="assets/favicon.svg" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <script type="module" src="js/admin-main.js"></script>
+  </head>
+  <body class="admin-shell">
+    <main>
+      <header class="page-header">
+        <a class="brand" href="index.html">defter</a><a href="index.html">Uygulamaya dön</a
+        ><button class="button quiet" id="admin-logout" hidden>Çıkış yap</button>
+      </header>
+      <div class="title-row">
+        <div>
+          <div class="eyebrow">PLATFORM YÖNETİMİ</div>
+          <h1>İşletmeler</h1>
+          <p class="page-intro">
+            Yalnızca üyelik ve abonelik meta verileri. Fatura içeriği burada gösterilmez.
+          </p>
+        </div>
+      </div>
+      <p id="admin-status" role="status">Yetki kontrol ediliyor…</p>
+      <form id="admin-login" class="auth-panel" hidden>
+        <div class="fields">
+          <div class="field full">
+            <label for="admin-email">E-posta</label
+            ><input id="admin-email" type="email" autocomplete="email" required />
+          </div>
+          <div class="field full">
+            <label for="admin-password">Şifre</label
+            ><input id="admin-password" type="password" autocomplete="current-password" required />
+          </div>
+        </div>
+        <button class="button primary">Giriş yap</button>
+      </form>
+      <section id="admin-panel" hidden aria-label="İşletme abonelikleri">
+        <div id="admin-list" class="admin-list"></div>
+        <button class="button secondary" id="admin-next">Sonraki 50 işletme</button>
+      </section>
+    </main>
+  </body>
+</html>

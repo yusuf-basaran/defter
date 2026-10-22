@@ -1,0 +1,10 @@
+node_modules
+functions/node_modules
+.firebase
+.vercel
+package-lock.json
+functions/package-lock.json
+shared
+scratch
+library-files
+*-debug.log

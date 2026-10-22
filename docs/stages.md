@@ -1,0 +1,16 @@
+# Aşama kontrolleri
+
+Dosyalar birbirine bağlı çalışan son sürümdür; frontend derlemesi yoktur. Yerel başlangıç ve üretim ön koşulları README’dedir.
+
+| Aşama                   | Dosyalar                                                                                                              | Kontrol                                                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 0. Model                | architecture.md, security-review.md                                                                                   | İşletme yolu, rol ve sunucu/istemci yazma ayrımını incele.                                                                             |
+| 1. Başlangıç/Auth       | firebase.json, .firebaserc, js/firebase.js, js/auth.js, functions/index.js                                            | Emülatörde hesap oluştur, doğrula, işletme kur; ikinci işletmeye geç.                                                                  |
+| 2. Kurallar             | firestore.rules, storage.rules, firestore.indexes.json, tests/rules.test.js, tests/storage.test.js                    | `npm run test:emulators`; yabancı işletme, expired abonelik, rol/sahiplik ve issued yazma denemeleri reddedilmeli.                     |
+| 3. Sunucu               | functions/index.js, functions/lib/totals.js, functions/lib/validate.js, tests/functions.test.js, tests/totals.test.js | İki eşzamanlı taslak ardışık numara almalı; aynı isteğin tekrarı numara tüketmemeli. Sahte toplam sunucuda düzeltilmeli.               |
+| 4. Arayüz               | js/api.js, js/model.js, js/ui.js, js/render.js, js/pdf.js                                                             | Taslak kaydet, Düzenle, salt okunur belge, 50 kayıt sayfalama, Asıl+Suret PDF, mobil görünüm.                                          |
+| 5. Abonelik/davet/yedek | js/api.js, js/ui.js, functions/index.js                                                                               | Süreyi emülatörde geçmişe al: yazma kapalı; okuma, PDF ve JSON/CSV açık. Farklı e-postayla davet kabulü reddedilmeli.                  |
+| 6. Admin                | admin.html, js/admin.js, scripts/set-admin.js                                                                         | Claim olmayan hesap reddedilmeli. Claim’li hesap içerik yerine meta veri görmeli; uzatma/askı/etkinleştirme audit kaydı üretmeli.      |
+| 7. Aktarım              | js/migrate.js, docs/example-legacy.json, README.md                                                                    | Kurgusal belgeleri yeni işletmeye aktar; aynı numaralı farklı kaynak çakışmalı, mevcut belge korunmalı. Kaynak yerel veri silinmemeli. |
+
+Son incelemede uygulama kodunda console.log, TODO, eski localStorage kayıt katmanı ve kullanılmayan oran doğrulayıcısı kaldırıldı. Finansal yazma yetkisinin arayüzdeki disabled durumuna bağlı kalmadığı kural ve Functions testleriyle denetlendi. Üretim App Check, gerçek alan adları ve bütçe alarmı yerel testlerle tamamlanmış sayılmaz.

@@ -1,0 +1,36 @@
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  html,
+  body {
+    width: 210mm;
+    margin: 0;
+    padding: 0;
+    background: #fffdf8;
+    display: block;
+  }
+  body > *:not(#print-pages) {
+    display: none !important;
+  }
+  #print-pages {
+    display: block !important;
+    position: static;
+    width: 210mm;
+  }
+  #print-pages .invoice-paper {
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    break-after: page;
+    page-break-after: always;
+    margin: 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  #print-pages .invoice-paper:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}

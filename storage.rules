@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isMember(bid) {
+      return request.auth != null && request.auth.token.email_verified == true
+        && firestore.exists(/databases/(default)/documents/businesses/$(bid)/members/$(request.auth.uid));
+    }
+    function isOwner(bid) {
+      return isMember(bid) && firestore.get(/databases/(default)/documents/businesses/$(bid)/members/$(request.auth.uid)).data.role == 'owner';
+    }
+    function active(bid) {
+      let plan = firestore.get(/databases/(default)/documents/businesses/$(bid)/subscription/current).data;
+      return plan.status == 'active' && plan.currentPeriodEnd > request.time;
+    }
+    match /businesses/{bid}/logo/{filename} {
+      allow read: if isMember(bid);
+      allow create: if resource == null && isOwner(bid) && active(bid) && request.resource.size <= 500 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|webp)');
+      // Eski faturaların logo yolu korunur; yeni logo yeni dosya adıyla yüklenir.
+      allow update, delete: if false;
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

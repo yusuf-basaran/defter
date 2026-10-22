@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f1ea" />
+    <meta name="description" content="Defter — KKTC için işletme bazlı fatura ve KDV takibi." />
+    <title>Defter — Fatura atölyesi</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/invoice.css" />
+    <link rel="stylesheet" href="css/print.css" />
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">İçeriğe geç</a>
+    <aside class="sidebar" aria-label="Ana menü">
+      <a href="#" class="brand" data-action="editor" aria-label="Defter ana sayfa"
+        ><svg viewBox="0 0 28 32" aria-hidden="true">
+          <path d="M6 3h18v26H6zM10 3v26M3 8h6M3 15h6M3 22h6M14 10h6M14 15h6" /></svg
+        >defter<span>FATURA ATÖLYESİ</span></a
+      >
+      <div class="workspace-label">ÇALIŞMA ALANI</div>
+      <div class="field business-picker">
+        <label for="business-switcher">İşletme</label
+        ><select id="business-switcher">
+          <option>Giriş gerekiyor</option></select
+        ><button class="text-button" data-action="more-businesses" hidden>Daha fazla işletme</button
+        ><button class="text-button" data-action="new-business">İşletme ekle</button>
+      </div>
+      <nav>
+        <button class="nav-link active" data-action="editor">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 2.5h8l4 4v11H4zM12 2.5v4h4M7 10h6M7 13h4" /></svg
+          >Fatura oluştur<span>01</span>
+        </button>
+        <button class="nav-link" data-action="history">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M3 4h14v13H3zM3 8h14M7 2v4M13 2v4M6 11h3M6 14h7" /></svg
+          >Faturalarım<span id="history-count">0</span>
+        </button>
+        <button class="nav-link" data-action="monthly">Aylık KDV özeti</button>
+        <button class="nav-link" data-action="settings">Ayarlar</button>
+      </nav>
+      <div class="sidebar-note">
+        <span class="local-dot"></span>İşletme kayıtları Firebase’de saklanır.
+        <p>Yazdırılabilir belgeler, ayrı işletmeler.</p>
+      </div>
+      <div class="sidebar-bottom">
+        <button class="text-button" data-action="export">
+          Tüm verilerimi indir <span aria-hidden="true">↗</span>
+        </button>
+        <button class="text-button" data-action="import">Eski verileri aktar</button>
+        <label class="theme-control" for="theme"
+          >Görünüm<select id="theme">
+            <option value="system">Sistem</option>
+            <option value="light">Açık</option>
+            <option value="dark">Koyu</option>
+          </select></label
+        >
+        <a href="admin.html" id="admin-link" class="text-button" hidden>Platform yönetimi</a
+        ><button class="text-button" data-action="logout">Çıkış yap</button
+        ><span class="edition">DEFTER / KKTC · 3.0</span>
+      </div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <header class="page-header">
+        <div class="breadcrumb">Çalışma alanı <span>/</span> <span id="page-label">Yeni fatura</span></div>
+        <span class="header-date" id="header-date"></span>
+      </header>
+      <section id="auth-view" class="auth-panel">
+        <div class="eyebrow">İŞLERİNİN KAYDI.</div>
+        <h1>Defter’e giriş</h1>
+        <p class="page-intro">İşletmenin faturaları, kendi çalışma alanında.</p>
+        <p id="auth-status" role="status" class="auth-status">Bağlantı hazırlanıyor…</p>
+        <form id="auth-form">
+          <div class="fields">
+            <div class="field full" id="full-name-field" hidden>
+              <label for="full-name">Ad soyad</label
+              ><input id="full-name" autocomplete="name" maxlength="120" />
+            </div>
+            <div class="field full">
+              <label for="auth-email">E-posta</label
+              ><input id="auth-email" type="email" autocomplete="email" maxlength="254" required />
+            </div>
+            <div class="field full">
+              <label for="auth-password">Şifre</label
+              ><input
+                id="auth-password"
+                type="password"
+                autocomplete="current-password"
+                minlength="8"
+                required
+              /><span class="field-note">Yeni hesaplarda en az 8 karakter.</span>
+            </div>
+          </div>
+          <div class="auth-actions">
+            <button class="button primary" id="auth-submit" type="submit">Giriş yap</button
+            ><button class="button quiet" type="button" data-action="toggle-register">Hesap oluştur</button
+            ><button class="button quiet" type="button" data-action="reset-password">Şifremi unuttum</button>
+          </div>
+        </form>
+        <div id="verify-panel" hidden>
+          <p>E-posta adresini doğrulamak için gelen bağlantıyı aç.</p>
+          <button class="button primary" data-action="check-verification">Doğruladım</button
+          ><button class="button quiet" data-action="resend-verification">Bağlantıyı yeniden gönder</button
+          ><button class="button quiet" data-action="logout">Çıkış yap</button>
+        </div>
+        <p class="small muted">
+          Ortak cihazda işin bittiğinde çıkış yap. Çıkışta tarayıcı önbelleğini temizleme denenir.
+        </p>
+      </section>
+      <section id="setup-view" class="auth-panel" hidden>
+        <div class="eyebrow">İLK ADIM.</div>
+        <h1>İşletmeni kur</h1>
+        <p class="page-intro">14 günlük deneme, kurulum tamamlandığında başlar.</p>
+        <form id="setup-form">
+          <div class="fields">
+            <div class="field">
+              <label for="setup-name">İşletme kısa adı</label
+              ><input id="setup-name" maxlength="200" required />
+            </div>
+            <div class="field">
+              <label for="setup-legalName">Resmî ad / unvan</label
+              ><input id="setup-legalName" maxlength="200" required />
+            </div>
+            <div class="field full">
+              <label for="setup-address">Adres</label
+              ><textarea id="setup-address" maxlength="2000" required></textarea>
+            </div>
+            <div class="field">
+              <label for="setup-taxOffice">Vergi dairesi</label
+              ><input id="setup-taxOffice" list="setup-offices" maxlength="200" required /><datalist
+                id="setup-offices"
+              >
+                <option>Lefkoşa</option>
+                <option>Girne</option>
+                <option>Gazimağusa</option>
+                <option>Güzelyurt</option>
+                <option>İskele</option>
+                <option>Lefke</option>
+              </datalist>
+            </div>
+            <div class="field">
+              <label for="setup-taxNumber">Vergi numarası</label
+              ><input id="setup-taxNumber" maxlength="40" required />
+            </div>
+          </div>
+          <button class="button primary" type="submit">İşletmeyi oluştur</button>
+          <p id="setup-status" role="status"></p>
+        </form>
+      </section>
+      <div id="workspace-content" hidden>
+        <div id="subscription-banner" role="status" class="subscription-banner"></div>
+        <div id="migration-banner" class="subscription-banner" hidden>
+          Eski verilerinizi aktarın. Bu tarayıcıdaki kayıtlar otomatik taşınmaz.<button
+            class="button quiet"
+            data-action="import"
+          >
+            Aktarımı incele
+          </button>
+        </div>
+        <p id="connection-status" role="status" class="small muted"></p>
+        <section class="summary" id="summary" aria-label="Fatura özeti"></section>
+        <section id="editor-view">
+          <div class="title-row">
+            <div>
+              <div class="eyebrow">HER İŞİN BİR KAYDI OLSUN.</div>
+              <h1>Yeni fatura</h1>
+              <p class="page-intro">Detayları gir, faturanın son hâlini yanında gör.</p>
+            </div>
+            <div class="save-indicator" id="save-indicator" role="status">Yeni çalışma</div>
+          </div>
+          <div class="action-bar">
+            <div class="document-label">
+              <span class="status-tag" id="editor-status">Taslak</span><span id="document-number"></span>
+            </div>
+            <div class="actions">
+              <button class="button quiet" data-action="new" data-write>Yeni</button
+              ><button class="button quiet" data-action="discard" data-write>Taslağı sil</button
+              ><button class="button quiet" data-action="print">Yazdır</button
+              ><button class="button secondary" data-action="pdf">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M10 2v10M6 8l4 4 4-4M3 13v4h14v-4" /></svg
+                >PDF indir</button
+              ><button class="button secondary" data-action="paid" data-write hidden>Ödendi işaretle</button
+              ><button class="button quiet" data-action="cancel-current" data-write hidden>İptal et</button
+              ><button class="button primary" data-action="issue" data-write>Düzenle</button
+              ><button class="button secondary" data-action="save" data-write>
+                Taslağı kaydet <kbd>⌘ / Ctrl S</kbd>
+              </button>
+            </div>
+          </div>
+          <p class="archive-note">
+            Düzenlenmiş belgelerin sureti işletme arşivinde korunur ve silinemez. Taslaklar değiştirilebilir;
+            Düzenle işleminde numara sunucuda verilir.
+          </p>
+          <div class="output-options">
+            <label for="copies">Çıktı nüshası</label
+            ><select id="copies">
+              <option value="original">Asıl</option>
+              <option value="copy">Suret</option>
+              <option value="both">Asıl + Suret</option></select
+            ><span id="archive-state" class="small muted"></span>
+          </div>
+          <div class="mobile-tabs" role="group" aria-label="Çalışma görünümü">
+            <button data-action="tab-edit" aria-pressed="true">Düzenle</button
+            ><button data-action="tab-preview" aria-pressed="false">Önizleme</button>
+          </div>
+          <div class="editor-layout" data-tab="edit">
+            <form id="invoice-form" novalidate aria-label="Fatura bilgileri"></form>
+            <section class="preview-panel" aria-label="Canlı fatura önizlemesi">
+              <div class="preview-heading">
+                <span><span class="local-dot"></span> CANLI ÖNİZLEME</span><span>A4 · 210 × 297 mm</span>
+              </div>
+              <div id="preview-stage"><div id="invoice-preview"></div></div>
+              <p class="preview-caption">
+                Kâğıtta nasıl görünüyorsa, burada da öyle.<span id="preview-page-count"></span>
+              </p>
+            </section>
+          </div>
+        </section>
+        <section id="history-view" hidden>
+          <div class="title-row">
+            <div>
+              <div class="eyebrow">DÜZENLİ BİR KAYIT.</div>
+              <h1>Faturalarım</h1>
+              <p class="page-intro">Hazırladığın, gönderdiğin ve tahsil ettiğin işler.</p>
+            </div>
+            <button class="button primary" data-action="new">Fatura oluştur</button>
+          </div>
+          <div class="history-tools">
+            <div class="field">
+              <label for="search">Alıcı adına göre ara</label
+              ><input type="search" id="search" placeholder="Alıcı adının başlangıcı" />
+            </div>
+            <div class="field">
+              <label for="status-filter">Durum</label
+              ><select id="status-filter">
+                <option value="all">Tümü</option>
+                <option value="draft">Taslak</option>
+                <option value="issued">Düzenlendi</option>
+                <option value="paid">Ödendi</option>
+                <option value="cancelled">İptal</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sort">Sıralama</label
+              ><select id="sort">
+                <option value="date-desc">Tarih: yeniden eskiye</option>
+                <option value="date-asc">Tarih: eskiden yeniye</option>
+              </select>
+            </div>
+          </div>
+          <p class="muted small">
+            Arama, alıcı adının başlangıcına göre çalışır. Arama sırasında önce ad, ardından tarih sıralanır.
+            Her sayfada en fazla 50 belge vardır.
+          </p>
+          <p id="list-loading" class="small muted" role="status" hidden>Belgeler yükleniyor…</p>
+          <div id="history-list"></div>
+          <div class="pagination">
+            <button class="button secondary" data-action="page-prev">Önceki</button
+            ><span id="page-count"></span
+            ><button class="button secondary" data-action="page-next">Sonraki</button>
+          </div>
+        </section>
+        <section id="monthly-view" hidden>
+          <div class="title-row">
+            <div>
+              <div class="eyebrow">DÖNEM KAYITLARI.</div>
+              <h1>Aylık KDV özeti</h1>
+              <p class="page-intro">İptal belgeler ve proformalar hariç, kayıtlı faturalar.</p>
+            </div>
+            <button class="button secondary" data-action="csv">CSV indir</button>
+          </div>
+          <div class="field month-control">
+            <label for="summary-month">Dönem</label><input type="month" id="summary-month" />
+          </div>
+          <p class="small muted">
+            Tutarlar belge para biriminde ayrı gösterilir. Bu tablo bir beyanname değildir; yabancı para
+            birimleri otomatik olarak TL’ye çevrilmez.
+          </p>
+          <div id="monthly-summary"></div>
+        </section>
+        <section id="settings-view" hidden>
+          <div class="title-row">
+            <div>
+              <div class="eyebrow">DEFTERİN AYARLARI.</div>
+              <h1>Ayarlar</h1>
+              <p class="page-intro">Değişiklikler kayıtlı suretleri etkilemez.</p>
+            </div>
+          </div>
+          <form id="settings-form" novalidate></form>
+        </section>
+      </div>
+      <footer class="app-footer">
+        <span>İyi işlerin kaydı burada.</span><span>Defter · <span id="footer-year"></span></span>
+      </footer>
+    </main>
+    <div id="notifications" role="region" aria-label="Bildirimler"></div>
+    <p class="sr-only" id="total-announcement" aria-live="polite" aria-atomic="true"></p>
+    <p class="sr-only" id="notice-announcement" aria-live="polite" aria-atomic="true"></p>
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+      <form method="dialog">
+        <h2 id="confirm-title"></h2>
+        <p id="confirm-message"></p>
+        <div class="field" id="reason-field" hidden>
+          <label for="cancel-reason">İptal nedeni</label
+          ><textarea
+            id="cancel-reason"
+            minlength="5"
+            maxlength="1000"
+            placeholder="En az 5 karakter"
+          ></textarea>
+        </div>
+        <div class="dialog-actions">
+          <button class="button secondary" value="cancel">Vazgeç</button
+          ><button class="button primary" value="confirm" id="confirm-button">Devam et</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="legal-dialog" aria-labelledby="legal-title" aria-describedby="legal-message">
+      <h2 id="legal-title">Kullanmadan önce</h2>
+      <p id="legal-message"></p>
+      <div class="dialog-actions">
+        <button class="button primary" data-action="accept-notice">Okudum</button>
+      </div>
+    </dialog>
+    <dialog id="import-dialog" aria-labelledby="import-title">
+      <h2 id="import-title">Eski verileri aktar</h2>
+      <p>
+        İşletme sahibi olarak aktarılacak kayıtları incele. Kaynak kayıtlar silinmez. Numara çakışmasında
+        aktarım durur.
+      </p>
+      <div id="import-report"></div>
+      <div class="dialog-actions">
+        <button class="button secondary" data-action="close-import">Kapat</button
+        ><button class="button primary" data-action="confirm-import">Aktarımı başlat</button>
+      </div>
+    </dialog>
+    <input type="file" id="import-file" accept="application/json,.json" hidden />
+    <noscript>Defter’in çalışması için tarayıcınızda JavaScript’i açın.</noscript>
+  </body>
+</html>

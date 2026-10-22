@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // İşletme kimliği her zaman belge yolundan gelir; roller members/{uid} içindedir.
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isMember(bid) { return isVerified() && exists(/databases/$(database)/documents/businesses/$(bid)/members/$(request.auth.uid)); }
+    function memberRole(bid) { return get(/databases/$(database)/documents/businesses/$(bid)/members/$(request.auth.uid)).data.role; }
+    function isOwner(bid) { return isMember(bid) && memberRole(bid) == 'owner'; }
+    function isPlatformAdmin() { return isVerified() && request.auth.token.get('platformAdmin', false) == true; }
+    function canWrite(bid) { return isMember(bid) && memberRole(bid) in ['owner', 'accountant', 'staff'] && activeSubscription(bid); }
+    function activeSubscription(bid) {
+      let plan = get(/databases/$(database)/documents/businesses/$(bid)/subscription/current).data;
+      return plan.status == 'active' && plan.currentPeriodEnd > request.time;
+    }
+    function limited() { return request.query.limit != null && request.query.limit <= 50; }
+    function str(value, max) { return value is string && value.size() <= max; }
+    function required(value, max) { return str(value, max) && value.size() > 0; }
+    function money(value) { return value is int && value >= 0 && value <= 9007199254740991; }
+    function currency(value) { return value in ['TRY', 'GBP', 'EUR', 'USD']; }
+    function validProfile(d) {
+      return d.keys().hasAll(['fullName', 'phone', 'createdAt']) && d.keys().hasOnly(['fullName', 'phone', 'createdAt'])
+        && required(d.fullName, 120) && str(d.phone, 40) && d.createdAt is timestamp;
+    }
+    function validBusiness(d, bid) {
+      return d.keys().hasOnly(['name', 'legalName', 'address', 'phone', 'email', 'taxOffice', 'taxNumber', 'logoPath', 'defaultCurrency', 'bankName', 'bankBranch', 'bankIban', 'bankHolder', 'showAmountWords', 'createdBy', 'createdAt', 'invoiceCount', 'memberCount'])
+        && required(d.name, 200) && required(d.legalName, 200) && required(d.address, 2000) && str(d.phone, 200)
+        && str(d.email, 254) && required(d.taxOffice, 200) && required(d.taxNumber, 40)
+        && str(d.logoPath, 200) && (d.logoPath == '' || d.logoPath.matches('businesses/' + bid + '/logo/[^/]{1,100}'))
+        && currency(d.defaultCurrency) && str(d.bankName, 200) && str(d.bankBranch, 200) && str(d.bankIban, 200) && str(d.bankHolder, 200)
+        && d.showAmountWords is bool;
+    }
+    function validClient(d) {
+      return d.keys().hasAll(['name', 'nameLower', 'address', 'email', 'phone', 'taxOffice', 'taxNumber', 'note', 'createdAt'])
+        && d.keys().hasOnly(['name', 'nameLower', 'address', 'email', 'phone', 'taxOffice', 'taxNumber', 'note', 'createdAt'])
+        && required(d.name, 200) && required(d.nameLower, 200) && required(d.address, 2000) && str(d.email, 254)
+        && str(d.phone, 200) && str(d.taxOffice, 200) && str(d.taxNumber, 40) && str(d.note, 2000) && d.createdAt is timestamp;
+    }
+    function validSnapshot(d, bid) {
+      let logo = d.get('logoPath', '');
+      return d is map && d.keys().hasOnly(['name', 'address', 'email', 'phone', 'taxOffice', 'taxNumber', 'logoPath', 'bankName', 'bankBranch', 'bankIban', 'bankHolder'])
+        && str(d.name, 200) && str(d.address, 2000) && str(d.email, 254) && str(d.phone, 200)
+        && str(d.taxOffice, 200) && str(d.taxNumber, 40) && str(logo, 200)
+        && (logo == '' || logo.matches('businesses/' + bid + '/logo/[^/]{1,100}'))
+        && (!('bankName' in d) || str(d.bankName, 200)) && (!('bankBranch' in d) || str(d.bankBranch, 200))
+        && (!('bankIban' in d) || str(d.bankIban, 200)) && (!('bankHolder' in d) || str(d.bankHolder, 200));
+    }
+    function validDraft(d, bid) {
+      // Taslak kalemleri ve ara toplamlar yetkili veri değildir; tamamı issueInvoice içinde doğrulanır.
+      return d.keys().hasOnly(['kind', 'status', 'seriesPrefix', 'number', 'clientId', 'clientNameLower', 'issueDate', 'dueDate', 'deliveryDate', 'waybillNo', 'currency', 'exchangeRate', 'priceMode', 'discountType', 'discountValue', 'note', 'exemptionNote', 'items', 'sellerSnapshot', 'clientSnapshot', 'subtotalCents', 'discountCents', 'baseCents', 'vatBreakdown', 'vatCents', 'totalCents', 'createdBy', 'createdAt', 'updatedAt', 'template', 'accent', 'showAmountWords', 'paymentTerms'])
+        && d.kind in ['invoice', 'proforma'] && d.status == 'draft' && d.number == null
+        && required(d.seriesPrefix, 20) && d.seriesPrefix.matches('[A-Z0-9_]+')
+        && str(d.clientId, 150) && str(d.clientNameLower, 200) && str(d.issueDate, 10) && str(d.dueDate, 10) && str(d.deliveryDate, 10)
+        && str(d.waybillNo, 100) && currency(d.currency) && (d.exchangeRate == null || (d.exchangeRate is int && d.exchangeRate > 0 && d.exchangeRate <= 1000000000000))
+        && d.priceMode in ['inclusive', 'exclusive'] && d.discountType in ['percent', 'fixed'] && money(d.discountValue)
+        && (d.discountType != 'percent' || d.discountValue <= 10000) && str(d.note, 5000) && str(d.exemptionNote, 1000)
+        && d.items is list && d.items.size() > 0 && d.items.size() <= 100 && d.vatBreakdown is list && d.vatBreakdown.size() <= 101
+        && validSnapshot(d.sellerSnapshot, bid) && validSnapshot(d.clientSnapshot, bid)
+        && money(d.subtotalCents) && money(d.discountCents) && money(d.baseCents) && money(d.vatCents) && money(d.totalCents)
+        && required(d.createdBy, 150) && d.createdAt is timestamp && d.updatedAt == request.time
+        && d.template in ['classic', 'plain', 'stripe'] && d.accent is string && d.accent.matches('#[0-9a-fA-F]{6}')
+        && d.showAmountWords is bool && str(d.paymentTerms, 1000);
+    }
+    match /users/{uid} {
+      allow get: if isSignedIn() && request.auth.uid == uid;
+      allow list, delete: if false;
+      allow create: if isSignedIn() && request.auth.uid == uid && validProfile(request.resource.data) && request.resource.data.createdAt == request.time;
+      allow update: if isSignedIn() && request.auth.uid == uid && validProfile(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+    }
+    match /businesses/{bid} {
+      allow get: if isMember(bid);
+      allow list, create, delete: if false;
+      allow update: if isOwner(bid) && activeSubscription(bid) && validBusiness(request.resource.data, bid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'legalName', 'address', 'phone', 'email', 'taxOffice', 'taxNumber', 'logoPath', 'defaultCurrency', 'bankName', 'bankBranch', 'bankIban', 'bankHolder', 'showAmountWords']);
+      match /members/{uid} {
+        allow get: if isMember(bid);
+        allow list: if isMember(bid) && limited();
+        allow write: if false;
+      }
+      match /clients/{clientId} {
+        allow get: if isMember(bid);
+        allow list: if isMember(bid) && limited();
+        allow create: if canWrite(bid) && validClient(request.resource.data) && request.resource.data.createdAt == request.time;
+        allow update: if canWrite(bid) && validClient(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if canWrite(bid);
+      }
+      match /series/{seriesId} {
+        allow get: if isMember(bid);
+        allow list: if isMember(bid) && limited();
+        allow write: if false;
+      }
+      match /invoices/{invoiceId} {
+        allow get: if isMember(bid);
+        allow list: if isMember(bid) && limited();
+        allow create: if canWrite(bid) && validDraft(request.resource.data, bid) && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+        allow update: if canWrite(bid) && resource.data.status == 'draft' && validDraft(request.resource.data, bid)
+          && request.resource.data.createdBy == resource.data.createdBy && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if canWrite(bid) && resource.data.status == 'draft';
+      }
+      match /subscription/{subscriptionId} {
+        allow get: if subscriptionId == 'current' && isMember(bid);
+        allow list, write: if false;
+      }
+      match /vatRates/{rateId} {
+        allow get: if isMember(bid);
+        allow list: if isMember(bid) && limited();
+        allow create, update: if isOwner(bid) && activeSubscription(bid)
+          && request.resource.data.keys().hasAll(['year', 'rate', 'label', 'enabled'])
+          && request.resource.data.keys().hasOnly(['year', 'rate', 'label', 'enabled'])
+          && request.resource.data.year is int && request.resource.data.year >= 1900 && request.resource.data.year <= 9999
+          && request.resource.data.rate is int && request.resource.data.rate >= 0 && request.resource.data.rate <= 100
+          && str(request.resource.data.label, 100) && request.resource.data.enabled is bool
+          && rateId == string(request.resource.data.year) + '-' + string(request.resource.data.rate);
+        allow delete: if isOwner(bid) && activeSubscription(bid);
+      }
+      match /auditLog/{entryId} {
+        allow get: if isOwner(bid);
+        allow list: if isOwner(bid) && limited();
+        allow write: if false;
+      }
+      match /monthlySummaries/{monthId} {
+        allow get: if isMember(bid);
+        allow list: if isMember(bid) && limited();
+        allow write: if false;
+      }
+      match /operations/{operationId} { allow read, write: if false; }
+    }
+    match /{path=**}/members/{uid} {
+      allow list: if isVerified() && resource.data.uid == request.auth.uid && limited();
+    }
+    match /vatRates/{year} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && limited();
+      allow create, update: if isPlatformAdmin() && year.matches('[0-9]{4}')
+        && request.resource.data.keys().hasOnly(['rates', 'year']) && request.resource.data.year is int && string(request.resource.data.year) == year && request.resource.data.rates is list
+        && request.resource.data.rates.size() > 0 && request.resource.data.rates.size() <= 101
+        && request.resource.data.rates.toSet().hasOnly([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]);
+      allow delete: if isPlatformAdmin();
+    }
+    match /invites/{token} { allow read, write: if false; }
+    match /businessCreations/{operationId} { allow read, write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
