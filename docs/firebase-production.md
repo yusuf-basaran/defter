@@ -13,6 +13,8 @@
 
 `firebase.json` içindeki Auth sağlayıcıları CLI ile dağıtılabilir. Alan adı ve şifre politikası ayrıca Auth yapılandırma API’sinden uygulandı ve geri okunarak doğrulandı; bir sonraki dağıtımda yalnızca CLI çıktısına bakarak bu ayarların uygulandığı varsayılmamalı.
 
+Canlı sitede giriş ekranı doğru projeyle ve JavaScript hatası olmadan açıldı. On indeksin tamamı `READY`; anonim Firestore isteği 403 ile reddedildi. Otomatik Chromium kontrolünde App Check token değişimi ise `App attestation failed` yanıtı aldı. Nedeni henüz doğrulanmadı; gerçek cihazda doğrulama bekliyor. Enforcement veya skor eşiği bu kontrolü geçirmek için düşürülmedi.
+
 ## Kalan engel
 
 Faturalandırma hesabı API’de kapalı görünüyor (`open: false`). Projede `billingEnabled: false`. Functions dağıtımı Blaze gerekliliği nedeniyle durdu; Storage bucket oluşturma isteği de reddedildi. Fatura düzenleme, işletme kurulumu, davet ve abonelik işlemleri henüz üretimde çalışmaz.
