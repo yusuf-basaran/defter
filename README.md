@@ -5,6 +5,7 @@ Defter, KKTC’deki küçük işletmeler için fatura, proforma ve KDV takibi ü
 > Bu uygulama bir portfolyo/öğrenme projesidir. Resmî fatura düzeni, matbu belge ve ödeme kaydedici cihaz zorunlulukları ile belge saklama süreleri için Gelir ve Vergi Dairesi veya mali müşavirinize danışın.
 
 <!-- project-overview:start -->
+
 ## Projeye genel bakış
 
 ![Defter proje özellikleri: Fatura ve proforma, İşletme ve müşteriler, KDV ve iskonto hesabı, PDF ve yazdırma, Aylık özet ve yedek, Role göre işlemler](docs/images/project-overview.png)
@@ -23,6 +24,23 @@ Defter, KKTC’deki küçük işletmeler için fatura, proforma ve KDV takibi ü
 
 </details>
 <!-- project-overview:end -->
+
+## Uygulamadan görüntüler
+
+Ekran görüntüleri, kurgusal KKTC işletmeleri ve alıcılarıyla yerel Firebase emülatöründe alındı. Canlı ortamın tüm kurulum adımlarının tamamlandığı anlamına gelmez; [üretim kurulum notunda](docs/firebase-production.md) kalan adımlar yer alıyor. Görsellerdeki KDV oranları mevzuat doğrulaması değildir.
+
+![Kalemler, yüzde 5/10/16 KDV kırılımı, iskonto ve canlı A4 fatura önizlemesi](docs/screenshots/kalemler-ve-canli-onizleme.png)
+
+| Görünüm                                                    | Gösterilen özellikler                                                                   |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [Fatura oluşturma](docs/screenshots/fatura-olusturucu.png) | Satıcı/alıcı bilgileri, para birimi, seri, tarihler ve canlı önizleme                   |
+| [Fatura geçmişi](docs/screenshots/fatura-gecmisi.png)      | Taslak, düzenlenmiş, ödenmiş, gecikmiş ve iptal kayıtları; proforma, arama ve filtreler |
+| [Aylık KDV özeti](docs/screenshots/aylik-kdv-ozeti.png)    | Oran bazında matrah/KDV, ayrı para birimleri ve CSV indirme                             |
+| [Koyu tema](docs/screenshots/koyu-tema.png)                | Sıcak koyu arayüz ve kâğıt rengini koruyan belge                                        |
+| [Mobil önizleme](docs/screenshots/mobil-onizleme.png)      | Düzenle/Önizleme geçişi ve ekrana ölçeklenen A4 belge                                   |
+| [Platform yönetimi](docs/screenshots/yonetim-paneli.png)   | İşletme sayıları ve abonelik işlemleri; fatura içerikleri gösterilmez                   |
+
+[Tam boy galeri ve Klasik / Düz / Şerit şablonları](docs/screenshots/README.md).
 
 ## Yerelde çalıştırma
 
