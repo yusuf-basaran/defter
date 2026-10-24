@@ -4,6 +4,26 @@ Defter, KKTC’deki küçük işletmeler için fatura, proforma ve KDV takibi ü
 
 > Bu uygulama bir portfolyo/öğrenme projesidir. Resmî fatura düzeni, matbu belge ve ödeme kaydedici cihaz zorunlulukları ile belge saklama süreleri için Gelir ve Vergi Dairesi veya mali müşavirinize danışın.
 
+<!-- project-overview:start -->
+## Projeye genel bakış
+
+![Defter proje özellikleri: Fatura ve proforma, İşletme ve müşteriler, KDV ve iskonto hesabı, PDF ve yazdırma, Aylık özet ve yedek, Role göre işlemler](docs/images/project-overview.png)
+
+[Görseli büyük aç](docs/images/project-overview.png) · [SVG kaynağı](docs/images/project-overview.svg)
+
+<details>
+<summary>Görseldeki özellikler ve ilgili kaynaklar</summary>
+
+- **[Fatura ve proforma](js/model.js)** — Taslak, belge serisi, numaralandırma ve iptal.
+- **[İşletme ve müşteriler](js/ui.js)** — Birden fazla işletme ve müşteri kayıtları.
+- **[KDV ve iskonto hesabı](js/totals.js)** — KDV dahil / hariç tutarlar ve satır iskontoları.
+- **[PDF ve yazdırma](js/pdf.js)** — Asıl, suret ve çok sayfalı belge çıktıları.
+- **[Aylık özet ve yedek](js/api.js)** — Aylık tutarlar; JSON ve CSV veri dışa aktarımı.
+- **[Role göre işlemler](functions/index.js)** — Owner, accountant ve staff yetki ayrımı.
+
+</details>
+<!-- project-overview:end -->
+
 ## Yerelde çalıştırma
 
 Node.js 22 ve Java 21 kurulu olmalı. İlk kurulum:
